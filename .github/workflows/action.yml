@@ -43,12 +43,12 @@ jobs:
       #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
       #     projectBaseDir: src/
 
-      ##Code Coverage
-      - name: Generate JaCoCo Badge
-        uses: cicirello/jacoco-badge-generator@v2
-        with:
-          generate-branches-badge: true
-          jacoco-csv-file: target/jacocoTestReport.csv
+     ##Code Coverage
+    - name: Upload JaCoCo coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: jacoco-report
+        path: target/site/jacoco/index.html
 
       ##Build and push image
       - name: Get short SHA
