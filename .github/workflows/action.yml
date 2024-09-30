@@ -31,6 +31,26 @@ jobs:
       - name: Build with maven 
         run: mvn clean package
 
+      ##Unit test
+      - name: Unit test with maven
+        run: mvn test
+
+      ##Static code Analysis
+      # - name: SonarQube Scan
+      #   uses: sonarsource/sonarqube-scan-action@v3.0.0
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      #     projectBaseDir: src/
+
+      ##Code Coverage
+      - name: Generate JaCoCo Badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          generate-branches-badge: true
+          jacoco-csv-file: target/jacocoTestReport.csv
+
+      ##Build and push image
       - name: Get short SHA
         id: slug
         run: echo "::set-output name=sha7::$(echo ${GITHUB_SHA} | cut -c1-7)"

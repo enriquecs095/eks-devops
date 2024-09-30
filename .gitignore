@@ -32,3 +32,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+### Terraform
+/terraform/.[Tt]erraform/
+/terraform/.terraform.lock.hcl
+
+/terraform
