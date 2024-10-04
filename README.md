@@ -1,142 +1,278 @@
-# Demo Devops Java
+# Devsu Challenge
 
-This is a simple application to be used in the technical test of DevOps.
+A Devsu Challenge for DevOps Engineer position.
 
 ## Getting Started
 
-### Prerequisites
+### Tech Stack
 
-- Java Version 17
-- Spring Boot 3.0.5
-- Maven
+- Terraform 1.9.6 (IAC)
+- AWS  (Cloud vendor)
+- Java 17  (API application)
+- EKS 1.29 (Cluster)
+- Kubectl 1.31.1 (Kube api to interact cluster)
 
-### Installation
+### AWS infrastructure
 
-Clone this repo.
+![](image.png)
 
-```bash
-git clone https://bitbucket.org/devsu/demo-devops-java.git
-```
 
-### Database
+### Pipeline structure
 
-The database is generated as a file in the main path when the project is first run, and its name is `test.mv.db`.
+![](pipeline.png)
 
-Consider giving access permissions to the file for proper functioning.
+### Website URL
 
-## Usage
+You can visit the website at [https://devsu-prod.devopsworld.pro](https://devsu-prod.devopsworld.pro/).
 
-To run tests you can use this command.
+### Environment variables fro GitHub action
 
-```bash
-mvn clean test
-```
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `GH_TOKEN`
+- `GH_USERNAME`
+- `BUCKET_NAME`
+- `BUCKET_KEY`
+- `ENVIRONMENT_TERRAFORM_DEPLOYMENT`
+- `CLUSTER_NAME`
+- `KUBE_CONFIG_PATH`
+- `CONTEXT_NAME`
+- `GHCRCRED`
 
-To run locally the project you can use this command.
+### Terraform Module
 
-```bash
-mvn spring-boot:run
-```
+```hcl
+module "devsu_test" {
+  source      = "./modules"
 
-Open http://127.0.0.1:8000/api/swagger-ui.html with your browser to see the result.
+  environment = var.environment
 
-### Features
+  providers = {
+    aws = aws.default_region
+  }
 
-These services can perform,
+  name        = "devsu"
+  vpc = {
+    cidr_block   = "10.0.0.0/16"
+    dns_support  = true
+    dns_hostname = true
+  }
 
-#### Create User
-
-To create a user, the endpoint **/api/users** must be consumed with the following parameters:
-
-```bash
-  Method: POST
-```
-
-```json
-{
-    "dni": "dni",
-    "name": "name"
-}
-```
-
-If the response is successful, the service will return an HTTP Status 200 and a message with the following structure:
-
-```json
-{
-    "id": 1,
-    "dni": "dni",
-    "name": "name"
-}
-```
-
-If the response is unsuccessful, we will receive status 400 and the following message:
-
-```json
-{
-    "errors": [
-        "error"
-    ]
-}
-```
-
-#### Get Users
-
-To get all users, the endpoint **/api/users** must be consumed with the following parameters:
-
-```bash
-  Method: GET
-```
-
-If the response is successful, the service will return an HTTP Status 200 and a message with the following structure:
-
-```json
-[
+  subnets = [
     {
-        "id": 1,
-        "dni": "dni",
-        "name": "name"
+      name              = "subnet_1"
+      availability_zone = "us-east-1a"
+      cidr_block        = "10.0.1.0/24"
+    },
+    {
+      name              = "subnet_2"
+      availability_zone = "us-east-1b"
+      cidr_block        = "10.0.2.0/24"
     }
-]
-```
+  ]
 
-#### Get User
+  security_groups = [
+    {
+      name        = "sg_eks_worker_nodes"
+      description = "Security group for the EKS  cluster"
+      list_of_rules = [
+        {
+          name                       = "ingress_rule_1"
+          description                = "Allow to connect ssh from port 22 "
+          protocol                   = "tcp"
+          from_port                  = 22
+          to_port                    = 22
+          cidr_blocks                = ["0.0.0.0/0"]
+          source_security_group_name = null
+          type                       = "ingress"
+        },
+        {
+          name                       = "egress_rule_1"
+          description                = "Allow outbound traffic to any port"
+          protocol                   = "-1"
+          from_port                  = 0
+          to_port                    = 0
+          cidr_blocks                = ["0.0.0.0/0"]
+          source_security_group_name = null
+          type                       = "egress"
+        },
+      ]
+    },
 
-To get an user, the endpoint **/api/users/<id>** must be consumed with the following parameters:
+  ]
 
-```bash
-  Method: GET
-```
-
-If the response is successful, the service will return an HTTP Status 200 and a message with the following structure:
-
-```json
-{
-    "id": 1,
-    "dni": "dni",
-    "name": "name"
-}
-```
-
-If the user id does not exist, we will receive status 404 and the following message:
-
-```json
-{
-    "errors": [
-        "User not found: <id>"
+  eks = {
+    name = "eks_cluster"
+    version= "1.29"
+    subnets = [
+      "subnet_1",
+      "subnet_2"
     ]
-}
-```
+    node_group = {
+      node_group_name = "eks_cluster_group"
+      instance_types= [
+        "t2.medium"
+        ]
+      remote_access_key="eks_cluster_vms"
+      source_security_group= ["sg_eks_worker_nodes"]
+      scaling_config_desired_size = 2
+      scaling_config_max_size = 2
+      scaling_config_min_size =1
+      capacity_type = "ON_DEMAND"
+      ami_type = "AL2_x86_64"
+      update_config_max_unavailable=1
+    }
+  }
 
-If the response is unsuccessful, we will receive status 400 and the following message:
+  iam = {
+    cluster_role_name = "eks_role"
+    worker_node_role_name = "eks_worker_node_group_role"
+    load_balancer_controller_name = "aws-load-balancer-controller"
+    lb_policy_name= "ingress_controller_policy"
+    external_dns_role_name = "external_dns_role"
+    external_dns_policy_name = "external_dns_policy"
+  }
 
-```json
-{
-    "errors": [
-        "error"
+  acm_certificate = {
+    name                   = "acm_1"
+    dns_name               = "devopsworld.pro."
+    validation_method      = "DNS"
+    route53_record_type    = "A"
+    ttl                    = 60
+    evaluate_target_health = true
+  }
+
+
+  route53_record = {
+    ttl = 60
+    records = [
+      {
+        name                   = "record_1"
+        route53_record_type    = "A"
+        evaluate_target_health = true
+        route53_alias_name     = "devsu"
+      },
     ]
+  }
+
+  devops_name  = "Enrique"
+  project_name = "devsu"
+
 }
+
+```
+### Stages of deployment
+
+The pipeline is divided in 4 stages
+
+#### 1. Application containerization
+
+Setup the environment for java 
+
+```yml
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+
+      - name: Build with maven 
+        run: mvn clean package
+
 ```
 
-## License
+Containerizes the application 
+```yml
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          context: .
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ steps.slug.outputs.sha7 }}
+            ghcr.io/${{ github.repository }}:latest
+```
 
-Copyright © 2023 Devsu. All rights reserved.
+
+#### 2. Terraform deployment
+
+Set up AWS cli and credentials 
+
+```yml
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+```
+
+Intializes the working directory for terraform and deploy the infrastructure to AWS
+
+```yml
+      - name: Terraform init
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}"
+
+      - name: Terraform apply
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
+        run: terraform apply --var="environment=${{ secrets.ENVIRONMENT_TERRAFORM_DEPLOYMENT }}" --auto-approve
+```
+
+
+#### 3. Kubernetes deployment
+
+Provides the kubeconfig file
+```yml
+      - name: Get and set kubeconfig
+        run: |
+          aws eks --region us-east-1 update-kubeconfig --name ${{ secrets.CLUSTER_NAME }} --kubeconfig ${{ secrets.KUBE_CONFIG_PATH }}
+          kubectl config set-context ${{secrets.CONTEXT_NAME }}
+```
+
+Install dependencies and pull secret and save it as manifest
+```yml
+      - name: Install external-DNS
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
+        run: kubectl  apply -f dns-serviceaccount.yml
+
+      - name: Aggregate secret for accessing GitHub Container Registry from k8s
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
+        run: | 
+          cat << 'EOF' > ghcrcred.yml
+          ${{ secrets.GHCRCRED }}
+          EOF
+```
+
+Deploy manifests to EKS cluster
+```yml
+      - name: Deploy devsu test
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
+        run: | 
+          kubectl apply -f namespace.yml
+          kubectl apply -f ghcrcred.yml
+          kubectl apply -f deployment.yml
+```
+
+#### 4.  Terraform destroy
+
+Remove the namespace and its resources
+```yml
+      - name: Removing k8s namespace and resources
+        run: kubectl delete namespace devsu
+```
+
+Initializes the working directory and destroy the infrastructure
+```yml
+      - name: Terraform init
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}"
+
+      - name: Terraform apply
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
+        run: terraform destroy --var="environment=${{ secrets.ENVIRONMENT_TERRAFORM_DEPLOYMENT }}" --auto-approve
+```
+
+### Notes
+"For any inquiries, please feel free to contact me at enrique.cs095@gmail.com."
