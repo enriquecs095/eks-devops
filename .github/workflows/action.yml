@@ -109,14 +109,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - uses: actions-hub/kubectl@master
+
       - name: Get and set kubeconfig
         run: |
           aws eks --region us-east-1 update-kubeconfig --name ${{ secrets.CLUSTER_NAME }} --kubeconfig ${{ secrets.KUBE_CONFIG_PATH }}
-          kubectl config set-context ${{secrets.CONTEXT_NAME }}
-
-      - uses: actions-hub/kubectl@master
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG_PATH }}
+          kubectl config --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} set-context ${{secrets.CONTEXT_NAME }}
 
       - name: Install external-DNS
         working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
@@ -161,15 +159,18 @@ jobs:
           aws-region: us-east-1
 
       - uses: actions-hub/kubectl@master
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG_PATH }}
+
+      - name: Get and set kubeconfig
+        run: |
+          aws eks --region us-east-1 update-kubeconfig --name ${{ secrets.CLUSTER_NAME }} --kubeconfig ${{ secrets.KUBE_CONFIG_PATH }}
+          kubectl config --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} set-context ${{secrets.CONTEXT_NAME }}
+
+      - name: Removing k8s namespace and resources
+        run: kubectl delete namespace devsu
 
       - name: Terraform init
         working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
         run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}"
-
-      - name: Removing k8s namespace and resources
-        run: kubectl delete namespace devsu
 
       - name: Terraform apply
         working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
