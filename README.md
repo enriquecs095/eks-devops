@@ -25,7 +25,7 @@ A Devsu Challenge for DevOps Engineer position.
 
 You can visit the website at [https://devsu-prod.devopsworld.pro](https://devsu-prod.devopsworld.pro/).
 
-### Environment variables fro GitHub action
+### Environment variables for GitHub action
 
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
@@ -163,7 +163,7 @@ module "devsu_test" {
 ```
 ### Stages of deployment
 
-The pipeline is divided in 4 stages
+The pipeline is divided in 4 stages:
 
 #### 1. Application containerization
 
@@ -275,4 +275,4 @@ Initializes the working directory and destroy the infrastructure
 ```
 
 ### Notes
-"For any inquiries, please feel free to contact me at enrique.cs095@gmail.com."
+For any inquiries, please feel free to contact me at enrique.cs095@gmail.com.
