@@ -135,7 +135,7 @@ jobs:
       - name: Deploy devsu test
         working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
         run: | 
-          kubectl create namespace devsu
+          kubectl apply -f namespace.yml
           kubectl apply -f ghcrcred.yml
           kubectl apply -f deployment.yml
 
