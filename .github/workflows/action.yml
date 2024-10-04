@@ -121,7 +121,7 @@ jobs:
 
       - name: Install external-DNS
         working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
-        run: kubectl config --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} apply -f dns-serviceaccount.yml
+        run: kubectl --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} apply -f dns-serviceaccount.yml
 
       - name: Aggregate secret for accessing GitHub Container Registry from k8s
         working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
@@ -134,11 +134,11 @@ jobs:
         working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
         run: | 
           kubectl create namespace devsu
-          kubectl config --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} apply -f ghcrcred.yml
-          kubectl config --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} apply -f deployment.yml
+          kubectl --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} apply -f ghcrcred.yml
+          kubectl --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} apply -f deployment.yml
 
       - name: Getting dns name
-        run: kubectl config --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} get ingress devsu-ingress -n devsu -o jsonpath='{.spec.rules[0].host}'
+        run: kubectl --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} get ingress devsu-ingress -n devsu -o jsonpath='{.spec.rules[0].host}'
 
   Destroy_terraform_infrastructure:
     runs-on: ubuntu-latest
@@ -172,7 +172,7 @@ jobs:
           kubectl config --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} set-context ${{secrets.CONTEXT_NAME }}
 
       - name: Removing k8s namespace and resources
-        run: kubectl config --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} delete namespace devsu
+        run: kubectl --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} delete namespace devsu
 
       - name: Terraform init
         working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
