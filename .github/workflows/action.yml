@@ -133,7 +133,7 @@ jobs:
       - name: Deploy devsu test
         working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
         run: | 
-          kubectl create namespace devsu
+          kubectl --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} create namespace devsu
           kubectl --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} apply -f ghcrcred.yml
           kubectl --kubeconfig=${{ secrets.KUBE_CONFIG_PATH }} apply -f deployment.yml
 
