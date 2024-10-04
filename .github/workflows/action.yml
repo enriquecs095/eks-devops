@@ -84,23 +84,18 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       
-      - name: test
-        run: |
-          pwd 
-          ls -la
-      
       - name: Terraform init
-        working-directory: /home/runner/terraform
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
         run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}"
 
       - name: Terraform apply
-        working-directory: /home/runner/terraform
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
         run: terraform apply --var="environment=${{ secrets.ENVIRONMENT_TERRAFORM_DEPLOYMENT }}" --auto-approve
 
 
   Deploy_k8s_manifests:
     runs-on: ubuntu-latest
-    needs: [ build_and_push_image, Destroy_terraform_infrastructure ]
+    needs: [ build_and_push_image, Deploy_terraform_insfrastructure ]
 
     steps: 
 
@@ -124,18 +119,18 @@ jobs:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG_PATH }}
 
       - name: Install external-DNS
-        working-directory: /home/runner/manifests
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
         run: kubectl apply -f dns-serviceaccount.yml
 
       - name: Aggregate secret for accessing GitHub Container Registry from k8s
-        working-directory: /home/runner/manifests 
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
         run: | 
           cat << 'EOF' > ghcrcred.yml
           ${{ secrets.GHCRCRED }}
           EOF
 
       - name: Deploy devsu test
-        working-directory: /home/runner/manifests 
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
         run: | 
           kubectl create namespace devsu
           kubectl apply -f ghcrcred.yml
@@ -170,12 +165,12 @@ jobs:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG_PATH }}
 
       - name: Terraform init
-        working-directory: /home/runner/terraform
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
         run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}"
 
       - name: Removing k8s namespace and resources
         run: kubectl delete namespace devsu
 
       - name: Terraform apply
-        working-directory: /home/runner/terraform
+        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
         run: terraform destroy --var="environment=${{ secrets.ENVIRONMENT_TERRAFORM_DEPLOYMENT }}" --auto-approve
