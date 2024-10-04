@@ -38,4 +38,6 @@ build/
 /terraform/.[Tt]erraform/
 /terraform/.terraform.lock.hcl
 
-/terraform
+
+##k8s
+ghcrcred.yml
