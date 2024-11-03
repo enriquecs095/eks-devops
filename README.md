@@ -1,6 +1,6 @@
-# Devsu Challenge
+# EKS Challenge
 
-A Devsu Challenge for DevOps Engineer position.
+A EKS Challenge for DevOps Engineer.
 
 ## Getting Started
 
