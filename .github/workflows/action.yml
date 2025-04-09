@@ -85,11 +85,11 @@ jobs:
           aws-region: us-east-1
       
       - name: Terraform init
-        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
+        working-directory: /home/runner/work/eks-devops/eks-devops/terraform
         run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}"
 
       - name: Terraform apply
-        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
+        working-directory: /home/runner/work/eks-devops/eks-devops/terraform
         run: terraform apply --var="environment=${{ secrets.ENVIRONMENT_TERRAFORM_DEPLOYMENT }}" --auto-approve
 
 
@@ -122,18 +122,18 @@ jobs:
           kubectl config set-context ${{secrets.CONTEXT_NAME }}
 
       - name: Install external-DNS
-        working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
+        working-directory: /home/runner/work/eks-devops/eks-devops/manifests
         run: kubectl  apply -f dns-serviceaccount.yml
 
       - name: Aggregate secret for accessing GitHub Container Registry from k8s
-        working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
+        working-directory: /home/runner/work/eks-devops/eks-devops/manifests
         run: | 
           cat << 'EOF' > ghcrcred.yml
           ${{ secrets.GHCRCRED }}
           EOF
 
       - name: Deploy devsu test
-        working-directory: /home/runner/work/devsu-devops/devsu-devops/manifests
+        working-directory: /home/runner/work/eks-devops/eks-devops/manifests
         run: | 
           kubectl apply -f namespace.yml
           kubectl apply -f ghcrcred.yml
@@ -180,9 +180,9 @@ jobs:
         run: kubectl delete namespace devsu
 
       - name: Terraform init
-        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
+        working-directory: /home/runner/work/eks-devops/eks-devops/terraform
         run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}"
 
       - name: Terraform destroy
-        working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
+        working-directory: /home/runner/work/eks-devops/eks-devops/terraform
         run: terraform destroy --var="environment=${{ secrets.ENVIRONMENT_TERRAFORM_DEPLOYMENT }}" --auto-approve
