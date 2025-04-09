@@ -138,12 +138,14 @@ jobs:
           kubectl apply -f namespace.yml
           kubectl apply -f ghcrcred.yml
           kubectl apply -f deployment.yml
+          kubectl apply -f hpa.yml
 
       - name: Getting dns name
         run: kubectl get ingress devsu-ingress -n devsu -o jsonpath='{.spec.rules[0].host}'
 
   Destroy_terraform_infrastructure:
     runs-on: ubuntu-latest
+    if: false
     needs: [Deploy_terraform_insfrastructure, Deploy_k8s_manifests ]
     env:
       KUBECONFIG: ${{ secrets.KUBE_CONFIG_PATH }}
@@ -181,6 +183,6 @@ jobs:
         working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
         run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}"
 
-      - name: Terraform apply
+      - name: Terraform destroy
         working-directory: /home/runner/work/devsu-devops/devsu-devops/terraform
         run: terraform destroy --var="environment=${{ secrets.ENVIRONMENT_TERRAFORM_DEPLOYMENT }}" --auto-approve
