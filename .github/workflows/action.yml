@@ -186,4 +186,3 @@ jobs:
       - name: Terraform destroy
         working-directory: /home/runner/work/eks-devops/eks-devops/terraform
         run: terraform destroy --var="environment=${{ secrets.ENVIRONMENT_TERRAFORM_DEPLOYMENT }}" --auto-approve
-
