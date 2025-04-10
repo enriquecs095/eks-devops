@@ -86,7 +86,7 @@ jobs:
       
       - name: Terraform init
         working-directory: /home/runner/work/eks-devops/eks-devops/terraform
-        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}"
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}" -backend-config="dynamodb_table=dynamodb-state-locking" -backend-config="encrypt=true"
 
       - name: Terraform apply
         working-directory: /home/runner/work/eks-devops/eks-devops/terraform
@@ -181,8 +181,9 @@ jobs:
 
       - name: Terraform init
         working-directory: /home/runner/work/eks-devops/eks-devops/terraform
-        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}"
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="key=${{ secrets.BUCKET_KEY }}" -backend-config="dynamodb_table=dynamodb-state-locking" -backend-config="encrypt=true"
 
       - name: Terraform destroy
         working-directory: /home/runner/work/eks-devops/eks-devops/terraform
         run: terraform destroy --var="environment=${{ secrets.ENVIRONMENT_TERRAFORM_DEPLOYMENT }}" --auto-approve
+
