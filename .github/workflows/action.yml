@@ -145,7 +145,6 @@ jobs:
 
   Destroy_terraform_infrastructure:
     runs-on: ubuntu-latest
-    if: false
     needs: [Deploy_terraform_insfrastructure, Deploy_k8s_manifests ]
     env:
       KUBECONFIG: ${{ secrets.KUBE_CONFIG_PATH }}
